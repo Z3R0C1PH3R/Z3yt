@@ -61,11 +61,19 @@ def load_thumbnails(res):
     return imgs
 
 
+# These handhelds have no AV1 decoder, and yt-dlp's default pick for a modern
+# YouTube video is AV1, which then software decodes at a few frames a second.
+# So ask for H.264 first, then HEVC, and only take anything else as a last
+# resort. The "<=?" means a format with no reported height is allowed through
+# rather than rejected, which matters for live HLS.
 YTDL_FORMAT = (
-    "bestvideo[height<=480][vcodec^=avc]+bestaudio/"
-    "bestvideo[height<=480][vcodec^=hev1]+bestaudio/"
-    "bestvideo[height<=480]+bestaudio/"
-    "best[height<=480]"
+    "bestvideo[height<=?480][vcodec^=avc]+bestaudio/"
+    "best[height<=?480][vcodec^=avc]/"
+    "bestvideo[height<=?480][vcodec^=hev1]+bestaudio/"
+    "best[height<=?480][vcodec^=hev1]/"
+    "bestvideo[height<=?480]+bestaudio/"
+    "best[height<=?480]/"
+    "best"
 )
 
 def play_video(url:str):

@@ -39,6 +39,7 @@ Enjoy :)
 1. No numpy, and no pip installs at all. Everything the app needs is already on the stock firmware, so installing is much faster and no longer fails when pip does.
 1. The installer shows its progress on screen from the very beginning instead of after the dependencies are done.
 1. Drawing is done with plain byte writes to the framebuffer, pixel for pixel the same as before.
+1. Fixed most videos failing to play. yt-dlp was falling through to an AV1 stream, which these handhelds cannot decode in hardware, so H.264 is now requested explicitly.
 
 ## Older Changes (v0.2)
 
