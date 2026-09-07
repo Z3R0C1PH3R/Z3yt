@@ -1,7 +1,7 @@
+import os
 import display
 import buttoninput
 from time import sleep
-import numpy as np
 
 KB_SIZE = (10,4)
 KB_POS = (5,480-64*4-2)
@@ -10,10 +10,13 @@ w,h = 21,38
 FONT_PADDING = (((display.RES[0]//KB_SIZE[0]-1) - w)//2, ((display.RES[0]//KB_SIZE[0]-1) - h)//2)
 
 br_fs = (210, 38)
-with open("font4.bin", "rb") as f:
-    font = np.frombuffer(f.read(), dtype=np.uint32).reshape(-1, h, w)
+GLYPH = w*h*4
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "font4.bin"), "rb") as f:
+    _font4 = f.read()
 
-bottom_row = font
+# Same layout as font32.bin: fixed size glyphs one after another, so slicing
+# out glyph i gives exactly what draw_part wants.
+bottom_row = [_font4[i*GLYPH:(i+1)*GLYPH] for i in range(len(_font4)//GLYPH)]
 
 SET1 =   "qwertyuiopasdfghjkl.zxcvbnm,?!"
 SET2 =   "QWERTYUIOPASDFGHJKL.ZXCVBNM,?!"
@@ -30,7 +33,7 @@ selected = [0,0]
 
 
 def draw_kb_frame():
-    display.draw_screen(display.BLACK.repeat(display.FULL))
+    display.draw_screen(display.BLACK*display.FULL)
     for j in range(KB_SIZE[1]):
         for i in range(KB_SIZE[0]):
             display.draw_rect(display.WHITE, (KB_CELL_SIZE, KB_CELL_SIZE), (KB_POS[0] + i*KB_CELL_SIZE, KB_POS[1] + j*KB_CELL_SIZE))
@@ -56,7 +59,7 @@ def draw_buffer(redraw=True):
         display.draw_text(buffer[-1], (FONT_PADDING[0] + (i%max_buffer)*w, FONT_PADDING[1] + (i//max_buffer)*h))
         display.inv_part((w,h), (FONT_PADDING[0] + (cursor%max_buffer)*w, FONT_PADDING[1] + (cursor//max_buffer)*h))    
         return
-    display.draw_screen(display.BLACK.repeat(display.RES[0]*KB_POS[1]))
+    display.draw_screen(display.BLACK*(display.RES[0]*KB_POS[1]))
     display.draw_text(buffer, FONT_PADDING)
     display.inv_part((w,h), (FONT_PADDING[0] + (cursor%max_buffer)*w, FONT_PADDING[1] + (cursor//max_buffer)*h))
 
@@ -142,7 +145,7 @@ def text_input(placeholder=""):
             select_cell(selected)
             ret = handle_press(selected)
             if ret:
-                display.draw_screen(display.BLACK.repeat(display.FULL))
+                display.draw_screen(display.BLACK*display.FULL)
                 if ret == 1:
                     return buffer
                 elif ret == 2:

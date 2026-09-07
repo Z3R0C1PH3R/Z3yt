@@ -9,10 +9,10 @@ def text_area(text, dim=display.RES2, pos=(0,0), padding=(1,1)):
     num_pages = len(pages)
     cur_page = 0
 
-    display.draw_screen(display.BLACK.repeat(display.FULL))
+    display.draw_screen(display.BLACK*display.FULL)
     display.draw_rect(display.WHITE, dim, pos)
     if cur_page < num_pages-1:
-        display.draw_screen(display.np.tile(display.np.concatenate((display.WHITE.repeat(8), display.BLACK.repeat(10))), dim[0]//18), (pos[0], pos[1]+dim[1]))
+        display.draw_screen((display.WHITE*8 + display.BLACK*10)*(dim[0]//18), (pos[0], pos[1]+dim[1]))
     display.draw_text("\n".join(pages[cur_page]), (pos[0]+padding[0], pos[1]+padding[1]))
 
     while True:
@@ -20,18 +20,18 @@ def text_area(text, dim=display.RES2, pos=(0,0), padding=(1,1)):
         state = int(state)
         if button == "DY" and state:
             cur_page = (cur_page - state) % num_pages
-            display.draw_screen(display.BLACK.repeat(display.FULL))
+            display.draw_screen(display.BLACK*display.FULL)
             display.draw_rect(display.WHITE, dim, pos)
             if cur_page > 0:
-                display.draw_screen(display.np.tile(display.np.concatenate((display.WHITE.repeat(8), display.BLACK.repeat(10))), dim[0]//18), pos)
+                display.draw_screen((display.WHITE*8 + display.BLACK*10)*(dim[0]//18), pos)
             if cur_page < num_pages-1:
-                display.draw_screen(display.np.tile(display.np.concatenate((display.WHITE.repeat(8), display.BLACK.repeat(10))), dim[0]//18), (pos[0], pos[1]+dim[1]))
+                display.draw_screen((display.WHITE*8 + display.BLACK*10)*(dim[0]//18), (pos[0], pos[1]+dim[1]))
             display.draw_text("\n".join(pages[cur_page]), (pos[0]+padding[0], pos[1]+padding[1]))
 
         if (button == "B" or button == "MENU") and state:
             break
 
-    display.draw_screen(display.BLACK.repeat(display.FULL))
+    display.draw_screen(display.BLACK*display.FULL)
     return cur_page
 
 def menu(options, title="Select", cur_option=0, dim=display.RES2, pos=(0,0), padding=(1,1), images=[]): # images = [link, dim, pos]
@@ -45,10 +45,10 @@ def menu(options, title="Select", cur_option=0, dim=display.RES2, pos=(0,0), pad
         num_pages = len(pages)
         cur_page = 0
 
-        display.draw_screen(display.BLACK.repeat(display.FULL))
+        display.draw_screen(display.BLACK*display.FULL)
         display.draw_rect(display.WHITE, dim, pos)
         if cur_page < num_pages-1:
-            display.draw_screen(display.np.tile(display.np.concatenate((display.WHITE.repeat(8), display.BLACK.repeat(10))), dim[0]//18), (pos[0], pos[1]+dim[1]))
+            display.draw_screen((display.WHITE*8 + display.BLACK*10)*(dim[0]//18), (pos[0], pos[1]+dim[1]))
         display.draw_text("\n".join(pages[cur_page]), (pos[0]+padding[0], pos[1]+padding[1]))
 
         if images:
@@ -59,12 +59,12 @@ def menu(options, title="Select", cur_option=0, dim=display.RES2, pos=(0,0), pad
             state = int(state)
             if button == "DY" and state:
                 cur_page = (cur_page - state) % num_pages
-                display.draw_screen(display.BLACK.repeat(display.FULL))
+                display.draw_screen(display.BLACK*display.FULL)
                 display.draw_rect(display.WHITE, dim, pos)
                 if cur_page > 0:
-                    display.draw_screen(display.np.tile(display.np.concatenate((display.WHITE.repeat(8), display.BLACK.repeat(10))), dim[0]//18), pos)
+                    display.draw_screen((display.WHITE*8 + display.BLACK*10)*(dim[0]//18), pos)
                 if cur_page < num_pages-1:
-                    display.draw_screen(display.np.tile(display.np.concatenate((display.WHITE.repeat(8), display.BLACK.repeat(10))), dim[0]//18), (pos[0], pos[1]+dim[1]))
+                    display.draw_screen((display.WHITE*8 + display.BLACK*10)*(dim[0]//18), (pos[0], pos[1]+dim[1]))
                 if cur_page == 0 and images:
                     display.draw_part(*images[cur_option])
                 display.draw_text("\n".join(pages[cur_page]), (pos[0]+padding[0], pos[1]+padding[1]))
@@ -78,12 +78,12 @@ def menu(options, title="Select", cur_option=0, dim=display.RES2, pos=(0,0), pad
                 break
 
             if button=="B" and state:
-                display.draw_screen(display.BLACK.repeat(display.FULL))
+                display.draw_screen(display.BLACK*display.FULL)
                 return -2
 
             if button=="MENU" and state:
-                display.draw_screen(display.BLACK.repeat(display.FULL))
+                display.draw_screen(display.BLACK*display.FULL)
                 return -1
 
-    display.draw_screen(display.BLACK.repeat(display.FULL))
+    display.draw_screen(display.BLACK*display.FULL)
     return cur_option

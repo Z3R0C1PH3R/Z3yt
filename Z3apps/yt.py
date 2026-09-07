@@ -1,4 +1,5 @@
 import json
+import os
 import requests
 import subprocess
 import buttoninput
@@ -8,7 +9,6 @@ import socket
 from time import sleep
 from PIL import Image
 from io import BytesIO
-import numpy as np
 
 MAX_RESULTS = 10
 IMGPOS = (318,2)
@@ -52,24 +52,47 @@ def load_thumbnails(res):
         url = res[i]["snippet"]["thumbnails"]["medium"]["url"]
         dim = (res[i]["snippet"]["thumbnails"]["medium"]["width"], res[i]["snippet"]["thumbnails"]["medium"]["height"])
        
-        b = np.array(Image.open(BytesIO(requests.get(url).content))).astype(np.uint32)
-        imgs.append([np.uint32(0xFF000000) | b[:,:,0] << 16 | b[:,:,1] << 8 | b[:,:,2], dim, IMGPOS])
+        img = Image.open(BytesIO(requests.get(url).content)).convert("RGBA")
+        # BGRA is exactly the framebuffer's byte order, so no conversion is needed.
+        raw = bytearray(img.tobytes("raw", "BGRA"))
+        raw[3::4] = b"\xff"*(len(raw)//4)  # force opaque, a thumbnail is never see-through
+        imgs.append([bytes(raw), dim, IMGPOS])
     
     return imgs
 
 
+YTDL_FORMAT = (
+    "bestvideo[height<=480][vcodec^=avc]+bestaudio/"
+    "bestvideo[height<=480][vcodec^=hev1]+bestaudio/"
+    "bestvideo[height<=480]+bestaudio/"
+    "best[height<=480]"
+)
+
 def play_video(url:str):
     spinner("Loading...", -1)
-    player = subprocess.Popen(f"""mpv --fs --no-terminal --keep-open --input-ipc-server=/tmp/mpv.socket --ytdl-format="(bestvideo[height<=?480][width<=?640]+bestaudio/best)[vcodec~='^((he|a)vc|h26[45])'] / (bv*+ba/b)" {url}""", shell=True)
+    try:
+        os.remove("/tmp/mpv.socket")
+    except FileNotFoundError:
+        pass
+    player = subprocess.Popen([
+        "mpv", "--fs", "--no-terminal", "--keep-open",
+        "--input-ipc-server=/tmp/mpv.socket",
+        f"--ytdl-format={YTDL_FORMAT}",
+        url,
+    ])
 
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    while True:
+    for _ in range(60):
+        if player.poll() is not None:
+            return True
         try:
             s.connect("/tmp/mpv.socket")
-        except Exception as e:
-            sleep(1)
-        else:
             break
+        except Exception:
+            sleep(1)
+    else:
+        player.kill()
+        return True
 
     while True:
         button, state = buttoninput.take_input().split()
