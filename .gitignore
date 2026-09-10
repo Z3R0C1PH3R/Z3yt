@@ -161,3 +161,6 @@ cython_debug/
 
 # API key, must never be published
 z3key
+
+# Not part of the app, an experiment that has sat here untracked for years.
+Z3yt/animeapi.py
