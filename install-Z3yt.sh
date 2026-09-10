@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 progdir=$(cd "$(dirname "$0")" && pwd)
-exec >"$progdir/Z3apps-logfile.txt" 2>&1
+exec >"$progdir/Z3yt-install-logfile.txt" 2>&1
 
 export DEBIAN_FRONTEND=noninteractive
 export GIT_TERMINAL_PROMPT=0
@@ -14,8 +14,11 @@ fail() {
         return 0
     fi
     echo "ERROR"
-    (cd /temp/Z3apps 2>/dev/null || cd "$progdir/Z3apps" 2>/dev/null) && \
-        python3 -c "import display; display.draw_text('ERROR, CHECK LOGS')" || true
+    # Braces, not brackets: a bracket makes the cd its own subshell and the
+    # python then runs back in the original directory, finds no display module
+    # and the failure never reaches the screen.
+    ( { cd /temp/Z3yt 2>/dev/null || cd "$progdir/Z3yt" 2>/dev/null; } && \
+        python3 -c "import display; display.draw_text('ERROR, CHECK LOGS')" ) || true
     cd / || true
     rm -rf /temp
     exit 1
@@ -38,10 +41,12 @@ retry() {
 }
 
 msg() {
-    (cd /temp/Z3apps && python3 -c "import display; display.draw_text('''$1''')") || true
+    # Same fallback as fail(), so a message still draws once /temp has gone.
+    ( { cd /temp/Z3yt 2>/dev/null || cd "$progdir/Z3yt" 2>/dev/null; } && \
+        python3 -c "import display; display.draw_text('''$1''')" ) || true
 }
 
-echo "Z3apps install started $(date)"
+echo "Z3yt install started $(date)"
 
 # Prefer IPv4: these handhelds often have AAAA records but no working IPv6.
 if [ -f /etc/gai.conf ]; then
@@ -69,26 +74,26 @@ fi
 
 clone_github() {
     rm -rf /temp
-    git clone --depth 1 https://github.com/Z3R0C1PH3R/Z3apps.git /temp
+    git clone --depth 1 https://github.com/Z3R0C1PH3R/Z3yt.git /temp
 }
 
 fetch_tarball() {
-    rm -rf /temp /tmp/z3apps.tgz /tmp/z3extract
+    rm -rf /temp /tmp/z3yt.tgz /tmp/z3extract
     mkdir -p /tmp/z3extract
     wget --timeout=60 --tries=8 --retry-connrefused \
-        -O /tmp/z3apps.tgz \
-        https://codeload.github.com/Z3R0C1PH3R/Z3apps/tar.gz/refs/heads/main
-    tar -xzf /tmp/z3apps.tgz -C /tmp/z3extract
-    mv /tmp/z3extract/Z3apps-main /temp
-    rm -rf /tmp/z3apps.tgz /tmp/z3extract
+        -O /tmp/z3yt.tgz \
+        https://codeload.github.com/Z3R0C1PH3R/Z3yt/tar.gz/refs/heads/main
+    tar -xzf /tmp/z3yt.tgz -C /tmp/z3extract
+    mv /tmp/z3extract/Z3yt-main /temp
+    rm -rf /tmp/z3yt.tgz /tmp/z3extract
 }
 
-echo "Cloning Z3apps"
+echo "Cloning Z3yt"
 if ! retry 4 clone_github; then
     echo "git clone failed, trying GitHub tarball"
     retry 3 fetch_tarball
 fi
-test -f /temp/Z3apps/display.py
+test -f /temp/Z3yt/display.py
 test -f /temp/YouTube-Z3.sh
 
 msg "Installing packages..."
@@ -124,8 +129,8 @@ Installing pip dependencies...
 Done
 Installing yt-dlp...
 Done
-Installing Z3apps..."
-cp -r /temp/Z3apps /temp/YouTube-Z3.sh "$progdir/"
+Installing Z3yt..."
+cp -r /temp/Z3yt /temp/YouTube-Z3.sh "$progdir/"
 chmod a+x "$progdir/YouTube-Z3.sh"
 
 ok=1
@@ -135,7 +140,7 @@ Installing pip dependencies...
 Done
 Installing yt-dlp...
 Done
-Installing Z3apps...
+Installing Z3yt...
 Done
 Install Successful
 Rebooting..."
